@@ -13,6 +13,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/create" element={<CreateTrip />} />
+      <Route path="/trips/:id" element={<TripDetail />} />
     </Routes>
   </BrowserRouter>
   )
