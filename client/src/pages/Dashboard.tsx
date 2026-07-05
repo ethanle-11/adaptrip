@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import { formatDate  } from '../lib/utils'
 
 function Dashboard() {
     const [trips, setTrips] = useState([])
@@ -50,7 +51,7 @@ function Dashboard() {
                             <div key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)} className="bg-white rounded-xl shadow p-5 hover:shadow-md transition cursor-pointer">
                                 <h3 className="text-lg font-semibold">{trip.title}</h3>
                                 <p className="text-gray-500 text-sm">{trip.destination}</p>
-                                <p className="text-gray-400 text-sm">{trip.start_date} → {trip.end_date}</p>
+                                <p className="text-gray-400 text-sm">{formatDate(trip.start_date)} → {formatDate(trip.end_date)}</p>
                             </div>
                         ))}
                     </div>
