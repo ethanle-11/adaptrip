@@ -82,7 +82,19 @@ function TripDetail() {
                     ))}
                 </div>
                 <div className="w-1/2">
-                    
+                    <div className="sticky top-4">
+                        <MapContainer
+                            center={[20, 0]}
+                            zoom={2}
+                            style={{ height: '500px', width: '100%', borderRadius: '12px'}}
+                        >
+                            <TileLayer 
+                                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                            />
+
+                        </MapContainer>
+                    </div>
                 </div>
             </div>
         </div>
