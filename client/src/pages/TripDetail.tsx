@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
-import { useNavigate } from 'react-router-dom'
-import { formatDate } from '../lib/utils'
+import { formatDate, getDaysBetween } from '../lib/utils'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -23,6 +22,7 @@ function TripDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const navigate = useNavigate()
+    const [openDayIndex, setOpenDayIndex] = useState<number | null> (null)
 
     useEffect(() => {
 
@@ -49,20 +49,40 @@ function TripDetail() {
     
     if (error) return <div className="min-h-screen flex items-center justify-center"><h1>There's a problem loading this page.</h1></div>
 
+    const days = getDaysBetween(trip?.start_date, trip?.end_date)
+
     return (
         <div>
             <Navbar />
             <div className="px-6 py-4">
-                <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:underline mb-4 cursor-pointer">Back to Trips</button> 
+                <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:underline mb-4 cursor-pointer">← Back to Trips</button> 
                 <h1 className="text-3xl font-bold">{trip?.title}</h1>
                 <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
             </div>
-            <div className="flex gap-6">
+            <div className="flex gap-6 px-6 py-4">
                 <div className="w-1/2">
+                    {days.map((day, index) => (
+                        <div key={index} className="mb-6 bg-white rounded-xl shadow p-4">
+                            <div onClick={() => setOpenDayIndex(openDayIndex === index ? null : index)}
+                                className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-xl"
+                            >
+                                <h2 className="text-lg font-semibold">
+                                    Day {index + 1} <span className='text-gray-400 font-normal'>- {formatDate(day.toISOString())}</span>
+                                </h2>
+                                <span className="text-gray-400">{openDayIndex === index ? '▼' : '◀'}</span>
+                            </div>
 
+                            {openDayIndex === index && (
+                                <div className="px-4 pb-4">
+
+                                    <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer">+ Add Activity</button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
                 <div className="w-1/2">
-            
+                    
                 </div>
             </div>
         </div>
