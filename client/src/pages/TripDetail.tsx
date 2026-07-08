@@ -3,16 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-
-L.Icon.Default.mergeOptions({
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow
-})
+import { Map } from '@vis.gl/react-google-maps'
 
 
 function TripDetail() {
@@ -22,7 +13,23 @@ function TripDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const navigate = useNavigate()
-    const [openDayIndex, setOpenDayIndex] = useState<number | null> (null)
+    const [openDays, setOpenDays] = useState<Set<Number>>(new Set())
+    const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
+
+    {/* Collapsible day function */}
+
+    const toggleDay = (index: number) => {
+        setOpenDays(prev => {
+            const newSet = new Set(prev)
+            if (newSet.has(index)) {
+                newSet.delete(index)
+                setSearchingDayIndex(null)
+            } else {
+                newSet.add(index)
+            }
+            return newSet
+        })
+    }
 
     useEffect(() => {
 
@@ -52,49 +59,49 @@ function TripDetail() {
     const days = getDaysBetween(trip?.start_date, trip?.end_date)
 
     return (
-        <div>
+        <div className="h-screen flex flex-col overflow-hidden">
             <Navbar />
-            <div className="px-6 py-4">
-                <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:underline mb-4 cursor-pointer">← Back to Trips</button> 
-                <h1 className="text-3xl font-bold">{trip?.title}</h1>
-                <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
-            </div>
-            <div className="flex gap-6 px-6 py-4">
-                <div className="w-1/2">
+            <div className="flex flex-1 overflow-hidden">
+                <div className="w-1/2 overflow-y-auto p-6">
+                    <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:underline mb-4 cursor-pointer">← Back to Trips</button> 
+                    <h1 className="text-3xl font-bold">{trip?.title}</h1>
+                    <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
+
                     {days.map((day, index) => (
                         <div key={index} className="mb-6 bg-white rounded-xl shadow p-4">
-                            <div onClick={() => setOpenDayIndex(openDayIndex === index ? null : index)}
+                            <div onClick={() => toggleDay(index)}
                                 className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-xl"
                             >
                                 <h2 className="text-lg font-semibold">
                                     Day {index + 1} <span className='text-gray-400 font-normal'>- {formatDate(day.toISOString())}</span>
                                 </h2>
-                                <span className="text-gray-400">{openDayIndex === index ? '▼' : '◀'}</span>
+                                <span className="text-gray-400">{openDays.has(index) ? '▼' : '◀'}</span>
                             </div>
 
-                            {openDayIndex === index && (
+                            {openDays.has(index) && (
                                 <div className="px-4 pb-4">
-
-                                    <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer">+ Add Activity</button>
+                                    {searchingDayIndex === index ? (
+                                        <input 
+                                            type='search' 
+                                            autoFocus 
+                                            placeholder="Search for attractions..."
+                                            className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"    
+                                        />
+                                    ) : (
+                                        <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer" onClick={() => setSearchingDayIndex(index)}>+ Add Activity</button>
+                                    )}
                                 </div>
                             )}
                         </div>
                     ))}
                 </div>
-                <div className="w-1/2">
-                    <div className="sticky top-4">
-                        <MapContainer
-                            center={[20, 0]}
-                            zoom={2}
-                            style={{ height: '500px', width: '100%', borderRadius: '12px'}}
-                        >
-                            <TileLayer 
-                                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                            />
-
-                        </MapContainer>
-                    </div>
+                <div className="w-1/2 sticky top-0 h-full">
+                    <Map 
+                        style={{ height: '100%', width: '100%', borderRadius: '12px' }}
+                        defaultCenter={{ lat: 20, lng: 0 }}
+                        defaultZoom={2}
+                        gestureHandling={'greedy'}
+                    />
                 </div>
             </div>
         </div>
