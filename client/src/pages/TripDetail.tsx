@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
 import { Map } from '@vis.gl/react-google-maps'
+import { useDebounce } from 'use-debounce'
 
 
 function TripDetail() {
@@ -15,6 +16,10 @@ function TripDetail() {
     const navigate = useNavigate()
     const [openDays, setOpenDays] = useState<Set<Number>>(new Set())
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
+    const [searchResults, setSearchResults] = useState([])
+    const [isSearching, setIsSearching] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [debouncedQuery] = useDebounce(searchQuery, 500)
 
     {/* Collapsible day function */}
 
@@ -30,6 +35,8 @@ function TripDetail() {
             return newSet
         })
     }
+
+    {/* fetch trips effect */}
 
     useEffect(() => {
 
@@ -51,6 +58,7 @@ function TripDetail() {
         fetchTripData()
      
     }, [id])
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
     
@@ -85,7 +93,9 @@ function TripDetail() {
                                             type='search' 
                                             autoFocus 
                                             placeholder="Search for attractions..."
-                                            className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"    
+                                            className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}    
                                         />
                                     ) : (
                                         <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer" onClick={() => setSearchingDayIndex(index)}>+ Add Activity</button>
