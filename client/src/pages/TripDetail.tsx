@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
 import { Map } from '@vis.gl/react-google-maps'
-import { useDebounce } from 'use-debounce'
 
 
 function TripDetail() {
@@ -19,7 +18,6 @@ function TripDetail() {
     const [searchResults, setSearchResults] = useState([])
     const [isSearching, setIsSearching] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
-    const [debouncedQuery] = useDebounce(searchQuery, 500)
 
     {/* Collapsible day function */}
 
