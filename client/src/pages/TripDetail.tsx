@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
 import { Map } from '@vis.gl/react-google-maps'
+import { useDebounce } from 'use-debounce'
+import axios from 'axios'
 
 
 function TripDetail() {
@@ -13,11 +15,11 @@ function TripDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const navigate = useNavigate()
-    const [openDays, setOpenDays] = useState<Set<Number>>(new Set())
+    const [openDays, setOpenDays] = useState<Set<number>>(new Set())
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
     const [searchResults, setSearchResults] = useState([])
-    const [isSearching, setIsSearching] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
+    const [debouncedQuery] = useDebounce(searchQuery, 500)
 
     {/* Collapsible day function */}
 
@@ -56,6 +58,27 @@ function TripDetail() {
         fetchTripData()
      
     }, [id])
+
+    {/* Search actvities effect */}
+
+    useEffect(() => {
+
+        const searchPlaces = async () => {
+            if (!debouncedQuery) {
+                setSearchResults([])
+                return
+            }
+
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/places/search`, {
+                params: {
+                    query: debouncedQuery
+                }
+            })
+            setSearchResults(response.data.places)
+        }
+        searchPlaces()
+
+    }, [debouncedQuery])
 
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
