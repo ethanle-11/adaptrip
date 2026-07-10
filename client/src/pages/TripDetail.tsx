@@ -110,14 +110,28 @@ function TripDetail() {
                             {openDays.has(index) && (
                                 <div className="px-4 pb-4">
                                     {searchingDayIndex === index ? (
-                                        <input 
-                                            type='search' 
-                                            autoFocus 
-                                            placeholder="Search for attractions..."
-                                            className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}    
-                                        />
+                                        <div>
+                                            <input 
+                                                type='search' 
+                                                autoFocus 
+                                                placeholder="Search for attractions..."
+                                                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}    
+                                            />
+                                            {searchResults.length > 0 && (
+                                                <div className="bg-white border border-gray-200 rounded-lg shadow-lg mt-1 overflow-hidden">
+                                                    {searchResults.map((place, index) => (
+                                                        <div key={index} className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                                                            <p className="text-sm font-medium">{place.displayName.text}</p>
+                                                            <p className="text-xs text-gray-400">{place.formattedAddress}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                                
+                                        </div>
+                                        
                                     ) : (
                                         <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer" onClick={() => setSearchingDayIndex(index)}>+ Add Activity</button>
                                     )}
