@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
-import { Map } from '@vis.gl/react-google-maps'
+import { Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps'
 import { useDebounce } from 'use-debounce'
 import axios from 'axios'
 
@@ -199,12 +199,20 @@ function TripDetail() {
                     ))}
                 </div>
                 <div className="w-1/2 sticky top-0 h-full">
-                    <Map 
+                    <Map
+                        mapId="adaptrip-map" 
                         style={{ height: '100%', width: '100%', borderRadius: '12px' }}
                         defaultCenter={{ lat: 20, lng: 0 }}
                         defaultZoom={2}
                         gestureHandling={'greedy'}
-                    />
+                    >
+                        {activities.map(activity => (
+                            <AdvancedMarker
+                                key={activity.id}
+                                position={{ lat: activity.latitude, lng: activity.longitude}}
+                            />
+                        ))}
+                    </Map>
                 </div>
             </div>
         </div>
