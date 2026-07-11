@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
@@ -21,7 +21,7 @@ function TripDetail() {
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery] = useDebounce(searchQuery, 500)
 
-    {/* Collapsible day function */}
+    // Collapsible day function
 
     const toggleDay = (index: number) => {
         setOpenDays(prev => {
@@ -36,9 +36,50 @@ function TripDetail() {
         })
     }
 
-    {/* fetch trips effect */}
+    // Fetch activities function
+
+    const fetchActivities = useCallback(async () => {
+        try {
+            const { data: activitiesData, error: activitiesError} = await supabase.from('activities').select('*').eq('trip_id', id)
+                    if (activitiesError) throw activitiesError
+                    setActivities(activitiesData)
+        } catch (error: any) {
+            setError(error.message || "Failed to fetch activities")
+        }
+    }, [id])
+            
+    // Select Activity Function 
+
+    const handleSelectPlace = async (place: any) => {
+        try {
+            await supabase
+            .from('activities')
+            .insert({   
+                trip_id: id,
+                title: place.displayName.text,
+                latitude: place.location.latitude,
+                longitude: place.location.longitude,
+                address: place.formattedAddress,
+                day_index: searchingDayIndex
+            })
+
+            await fetchActivities()
+
+            setSearchQuery('')
+            setSearchResults([])
+            setSearchingDayIndex(null)
+
+        } catch (error) {
+            setError("Failed to add activity")
+        }
+    }
+
+    
+
+    // fetch trips effect
 
     useEffect(() => {
+
 
         const fetchTripData = async () => {
             try {
@@ -46,9 +87,8 @@ function TripDetail() {
                 if (error) throw error
                 setTrip(data)
 
-                const { data: activitiesData, error: activitiesError} = await supabase.from('activities').select('*').eq('trip_id', id)
-                if (activitiesError) throw activitiesError
-                setActivities(activitiesData)
+                await fetchActivities()
+
             } catch (error) {
                 setError("Something went wrong")
             } finally {
@@ -57,9 +97,9 @@ function TripDetail() {
         }
         fetchTripData()
      
-    }, [id])
+    }, [id, fetchActivities])
 
-    {/* Search actvities effect */}
+    // Search activities effect
 
     useEffect(() => {
 
@@ -109,6 +149,16 @@ function TripDetail() {
 
                             {openDays.has(index) && (
                                 <div className="px-4 pb-4">
+                                    { activities
+                                        .filter(activity => activity.day_index === index)
+                                        .map(activity => (
+                                            <div key={activity.id} className="w-full py-4 border-b border-gray-300 last:border-0">
+                                                <p className="text-sm font-medium">{activity.title}</p>
+                                                <p className="text-xs text-gray-400">{activity.address}</p>
+                                            </div>
+                                        ))
+                                    }
+
                                     {searchingDayIndex === index ? (
                                         <div>
                                             <input 
@@ -122,7 +172,7 @@ function TripDetail() {
                                             {searchResults.length > 0 && (
                                                 <div className="bg-white border border-gray-200 rounded-lg shadow-lg mt-1 overflow-hidden">
                                                     {searchResults.map((place, index) => (
-                                                        <div key={index} className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                                                        <div key={index} onClick={() => handleSelectPlace(place)} className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
                                                             <p className="text-sm font-medium">{place.displayName.text}</p>
                                                             <p className="text-xs text-gray-400">{place.formattedAddress}</p>
                                                         </div>
@@ -133,7 +183,15 @@ function TripDetail() {
                                         </div>
                                         
                                     ) : (
-                                        <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer" onClick={() => setSearchingDayIndex(index)}>+ Add Activity</button>
+                                        <button 
+                                            className="text-sm text-teal-600 py-2 hover:underline mt-2 cursor-pointer" 
+                                            onClick={ () => {
+                                                setSearchingDayIndex(index) 
+                                                setSearchQuery('')
+                                                setSearchResults([])
+                                            }}>
+                                            + Add Activity
+                                        </button>
                                     )}
                                 </div>
                             )}
