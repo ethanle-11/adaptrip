@@ -14,7 +14,7 @@ router.get('/search', async (req, res) => {
             }
         )
         const location = response.data.results[0].location
-        res.json({ lat: location.latitude, lng: location.longitude})
+        res.json({ lat: location.latitude, lng: location.longitude })
     } catch (error) {
         res.status(500).json({ error: "Something went wrong"})
     }
