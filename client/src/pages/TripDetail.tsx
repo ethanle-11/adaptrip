@@ -110,16 +110,35 @@ function TripDetail() {
                 return
             }
 
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/places/search`, {
+            const placesResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/places/search`, {
                 params: {
                     query: debouncedQuery
                 }
             })
-            setSearchResults(response.data.places)
+            setSearchResults(placesResponse.data.places)
         }
         searchPlaces()
 
     }, [debouncedQuery])
+
+    // Pan map to destination
+
+    useEffect(() => {
+        
+        if (map && trip) {
+            const panToDestination = async () => {
+                const geoResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/geocoding/location`, {
+                    params: {
+                        destination: trip.destination
+                    }
+                })
+
+                map?.panTo({ lat: geoResponse.data.lat, lng: geoResponse.data.lng })
+                map?.setZoom(6)
+            }
+            panToDestination()
+        }
+    }, [map, trip])
 
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>

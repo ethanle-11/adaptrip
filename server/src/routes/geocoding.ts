@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const router = Router()
 
-router.get('/search', async (req, res) => {
+router.get('/location', async (req, res) => {
     const { destination } = req.query
     try {
         const response = await axios.get(
