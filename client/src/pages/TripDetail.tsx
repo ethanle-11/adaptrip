@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
-import { Map } from '@vis.gl/react-google-maps'
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { useDebounce } from 'use-debounce'
 import axios from 'axios'
 
@@ -20,8 +20,9 @@ function TripDetail() {
     const [searchResults, setSearchResults] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery] = useDebounce(searchQuery, 500)
+    const map = useMap()
 
-    {/* Collapsible day function */}
+    // Collapsible day function
 
     const toggleDay = (index: number) => {
         setOpenDays(prev => {
@@ -36,9 +37,50 @@ function TripDetail() {
         })
     }
 
-    {/* fetch trips effect */}
+    // Fetch activities function
+
+    const fetchActivities = useCallback(async () => {
+        try {
+            const { data: activitiesData, error: activitiesError} = await supabase.from('activities').select('*').eq('trip_id', id)
+                    if (activitiesError) throw activitiesError
+                    setActivities(activitiesData)
+        } catch (error: any) {
+            setError(error.message || "Failed to fetch activities")
+        }
+    }, [id])
+            
+    // Select Activity Function 
+
+    const handleSelectPlace = async (place: any) => {
+        try {
+            await supabase
+            .from('activities')
+            .insert({   
+                trip_id: id,
+                title: place.displayName.text,
+                latitude: place.location.latitude,
+                longitude: place.location.longitude,
+                address: place.formattedAddress,
+                day_index: searchingDayIndex
+            })
+
+            await fetchActivities()
+
+            setSearchQuery('')
+            setSearchResults([])
+            setSearchingDayIndex(null)
+
+        } catch (error) {
+            setError("Failed to add activity")
+        }
+    }
+
+    
+
+    // fetch trips effect
 
     useEffect(() => {
+
 
         const fetchTripData = async () => {
             try {
@@ -46,9 +88,8 @@ function TripDetail() {
                 if (error) throw error
                 setTrip(data)
 
-                const { data: activitiesData, error: activitiesError} = await supabase.from('activities').select('*').eq('trip_id', id)
-                if (activitiesError) throw activitiesError
-                setActivities(activitiesData)
+                await fetchActivities()
+
             } catch (error) {
                 setError("Something went wrong")
             } finally {
@@ -57,9 +98,9 @@ function TripDetail() {
         }
         fetchTripData()
      
-    }, [id])
+    }, [id, fetchActivities])
 
-    {/* Search actvities effect */}
+    // Search activities effect
 
     useEffect(() => {
 
@@ -69,16 +110,35 @@ function TripDetail() {
                 return
             }
 
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/places/search`, {
+            const placesResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/places/search`, {
                 params: {
                     query: debouncedQuery
                 }
             })
-            setSearchResults(response.data.places)
+            setSearchResults(placesResponse.data.places)
         }
         searchPlaces()
 
     }, [debouncedQuery])
+
+    // Pan map to destination
+
+    useEffect(() => {
+        
+        if (map && trip) {
+            const panToDestination = async () => {
+                const geoResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/geocoding/location`, {
+                    params: {
+                        destination: trip.destination
+                    }
+                })
+
+                map?.panTo({ lat: geoResponse.data.lat, lng: geoResponse.data.lng })
+                map?.setZoom(6)
+            }
+            panToDestination()
+        }
+    }, [map, trip])
 
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
@@ -109,17 +169,49 @@ function TripDetail() {
 
                             {openDays.has(index) && (
                                 <div className="px-4 pb-4">
+                                    { activities
+                                        .filter(activity => activity.day_index === index)
+                                        .map(activity => (
+                                            <div key={activity.id} className="w-full py-4 border-b border-gray-300 last:border-0">
+                                                <p className="text-sm font-medium">{activity.title}</p>
+                                                <p className="text-xs text-gray-400">{activity.address}</p>
+                                            </div>
+                                        ))
+                                    }
+
                                     {searchingDayIndex === index ? (
-                                        <input 
-                                            type='search' 
-                                            autoFocus 
-                                            placeholder="Search for attractions..."
-                                            className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}    
-                                        />
+                                        <div>
+                                            <input 
+                                                type='search' 
+                                                autoFocus 
+                                                placeholder="Search for attractions..."
+                                                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-2"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}    
+                                            />
+                                            {searchResults.length > 0 && (
+                                                <div className="bg-white border border-gray-200 rounded-lg shadow-lg mt-1 overflow-hidden">
+                                                    {searchResults.map((place, index) => (
+                                                        <div key={index} onClick={() => handleSelectPlace(place)} className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                                                            <p className="text-sm font-medium">{place.displayName.text}</p>
+                                                            <p className="text-xs text-gray-400">{place.formattedAddress}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                                
+                                        </div>
+                                        
                                     ) : (
-                                        <button className="text-sm text-teal-600 hover:underline mt-2 cursor-pointer" onClick={() => setSearchingDayIndex(index)}>+ Add Activity</button>
+                                        <button 
+                                            className="text-sm text-teal-600 py-2 hover:underline mt-2 cursor-pointer" 
+                                            onClick={ () => {
+                                                setSearchingDayIndex(index) 
+                                                setSearchQuery('')
+                                                setSearchResults([])
+                                            }}>
+                                            + Add Activity
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -127,12 +219,20 @@ function TripDetail() {
                     ))}
                 </div>
                 <div className="w-1/2 sticky top-0 h-full">
-                    <Map 
+                    <Map
+                        mapId="adaptrip-map" 
                         style={{ height: '100%', width: '100%', borderRadius: '12px' }}
                         defaultCenter={{ lat: 20, lng: 0 }}
                         defaultZoom={2}
                         gestureHandling={'greedy'}
-                    />
+                    >
+                        {activities.map(activity => (
+                            <AdvancedMarker
+                                key={activity.id}
+                                position={{ lat: activity.latitude, lng: activity.longitude}}
+                            />
+                        ))}
+                    </Map>
                 </div>
             </div>
         </div>
