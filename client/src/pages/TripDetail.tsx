@@ -75,6 +75,22 @@ function TripDetail() {
         }
     }
 
+    // Delete Activity Function
+
+    const handleDeleteActivity = async (activityId: any) => {
+        try {
+            await supabase
+            .from('activities')
+            .delete()
+            .eq('id', activityId)
+
+            await fetchActivities()
+
+        } catch (error) {
+            setError("Failed to delete activity")
+        }
+    }
+
     
 
     // fetch trips effect
@@ -172,9 +188,15 @@ function TripDetail() {
                                     { activities
                                         .filter(activity => activity.day_index === index)
                                         .map(activity => (
-                                            <div key={activity.id} className="w-full py-4 border-b border-gray-300 last:border-0">
-                                                <p className="text-sm font-medium">{activity.title}</p>
-                                                <p className="text-xs text-gray-400">{activity.address}</p>
+                                            <div key={activity.id} className="w-full py-4 border-b border-gray-300 last:border-0 flex justify-between items-center group">
+                                                <div>
+                                                    <p className="text-sm font-medium">{activity.title}</p>
+                                                    <p className="text-xs text-gray-400">{activity.address}</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleDeleteActivity(activity.id)} 
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">✖
+                                                </button>
                                             </div>
                                         ))
                                     }
