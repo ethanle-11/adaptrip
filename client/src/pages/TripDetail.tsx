@@ -21,6 +21,15 @@ function TripDetail() {
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery] = useDebounce(searchQuery, 500)
     const map = useMap()
+    const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
+
+    const [editActivity, setEditActivity] = useState({
+        start_time: '',
+        duration: null as number | null,
+        category: '',
+        priority: null as number | null,
+    })
+    
 
     // Collapsible day function
 
@@ -35,6 +44,24 @@ function TripDetail() {
             }
             return newSet
         })
+    }
+
+    // Activity Edit function
+
+    const toggleEditActivity = (activity: any) => {
+        if (activity.id === expandedActivityId) {
+            setExpandedActivityId(null)
+        } else {
+            setExpandedActivityId(activity.id)
+            setEditActivity({
+                start_time: activity.start_time || '',
+                duration: activity.duration,
+                category: activity.category || '',
+                priority: activity.priority
+
+            })
+        }
+        
     }
 
     // Fetch activities function
@@ -77,7 +104,7 @@ function TripDetail() {
 
     // Delete Activity Function
 
-    const handleDeleteActivity = async (activityId: any) => {
+    const handleDeleteActivity = async (activityId: string) => {
         try {
             await supabase
             .from('activities')
@@ -88,6 +115,30 @@ function TripDetail() {
 
         } catch (error) {
             setError("Failed to delete activity")
+        }
+    }
+
+    // Update Activity Function
+
+    const handleUpdateActivity = async () => {
+        if (!expandedActivityId) return
+
+        try {
+            await supabase
+            .from('activities')
+            .update({
+                start_time: editActivity.start_time || null,
+                duration: editActivity.duration,
+                category: editActivity.category || null,
+                priority: editActivity.priority
+            })
+            .eq('id', expandedActivityId)
+
+            await fetchActivities()
+
+            setExpandedActivityId(null)
+        } catch (error) {
+            setError('Failed to update activity')
         }
     }
 
@@ -188,18 +239,94 @@ function TripDetail() {
                                     { activities
                                         .filter(activity => activity.day_index === index)
                                         .map(activity => (
-                                            <div key={activity.id} className="w-full py-4 border-b border-gray-300 last:border-0 flex justify-between items-center group">
-                                                <div>
-                                                    <p className="text-sm font-medium">{activity.title}</p>
-                                                    <p className="text-xs text-gray-400">{activity.address}</p>
+                                            <div key={activity.id}>
+                                                <div 
+                                                    className="w-full py-4 border-b border-gray-300 last:border-0 flex justify-between items-center group cursor-pointer"
+                                                    onClick={() => toggleEditActivity(activity)}
+                                                >
+                                                    <div>
+                                                        <p className="text-sm font-medium">{activity.title}</p>
+                                                        <p className="text-xs text-gray-400">{activity.address}</p>
+                                                    </div>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleDeleteActivity(activity.id)
+                                                        }} 
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">✖
+                                                    </button>
                                                 </div>
-                                                <button 
-                                                    onClick={() => handleDeleteActivity(activity.id)} 
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">✖
-                                                </button>
+
+                                                {/* Activity Edit Panel */}
+
+                                                {expandedActivityId === activity.id && (
+                                                    <div className="bg-gray-50 rounded-lg p-4 mt-1">
+                                                        <div className="flex gap-4">
+                                                            {/* Start Time */}
+                                                            <div className="flex flex-col gap-1 flex-1">
+                                                                <label className="text-xs text-gray-500 font-medium">Start Time</label>
+                                                                <input 
+                                                                    type="time" 
+                                                                    value={editActivity.start_time || ''} 
+                                                                    onChange={(e) => setEditActivity(prev => ({ ...prev, start_time: e.target.value}))} 
+                                                                    className="border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                                />
+                                                            </div>
+                                                            {/* Duration */}
+                                                            <div className="flex flex-col gap-1 flex-1">
+                                                                <label className="text-xs text-gray-500 font-medium">Duration</label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    value={editActivity.duration ?? ''} 
+                                                                    onChange={(e) => setEditActivity(prev => ({ ...prev, duration: e.target.value ? Number(e.target.value): null}))} 
+                                                                    className="border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                                />
+                                                            </div>
+                                                            {/* Category */}
+                                                            <div className="flex flex-col gap-1 flex-1">
+                                                                <label className="text-xs text-gray-500 font-medium">Category</label>
+                                                                <select
+                                                                    value={editActivity.category || ''}
+                                                                    onChange={(e) => setEditActivity(prev => ({ ...prev, category: e.target.value}))}
+                                                                    className="border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                                >
+                                                                    <option value="">Select Category</option>
+                                                                    <option value="indoor">Indoor</option>
+                                                                    <option value="outdoor">Outdoor</option>
+                                                                    <option value="mixed">Mixed</option>
+                                                                </select>
+                                                            </div>
+                                                            {/* Priority */}
+                                                            <div className="flex flex-col gap-1 flex-1">
+                                                                <label className="text-xs text-gray-500 font-medium">Priority</label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    min={1} max={5} 
+                                                                    value={editActivity.priority || ''} 
+                                                                    onChange={(e) => setEditActivity(prev => ({ ...prev, priority: e.target.value ? Number(e.target.value) : null}))} 
+                                                                    className="border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                                />
+                                                            </div>
+
+                                                        </div>
+
+                                                        {/* Update activity submit button */}
+
+                                                        <div className="flex justify-end mt-3">
+                                                            <button 
+                                                                className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer"
+                                                                onClick={() => handleUpdateActivity()}
+                                                            >
+                                                                Save Changes
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))
                                     }
+
+                                    {/* Search Results */}
 
                                     {searchingDayIndex === index ? (
                                         <div>
