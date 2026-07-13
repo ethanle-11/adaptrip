@@ -19,8 +19,8 @@ router.get("/search", async (req, res) => {
 
             )
             res.json(response.data)
-    } catch (error) {
-        console.error(error)
+    } catch (error: any) {
+        console.error(error.response?.data)
         res.status(500).json({ error: "Something went wrong"})
     }
     
