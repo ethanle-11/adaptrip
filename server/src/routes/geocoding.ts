@@ -15,7 +15,8 @@ router.get('/location', async (req, res) => {
         )
         const location = response.data.results[0].location
         res.json({ lat: location.latitude, lng: location.longitude })
-    } catch (error) {
+    } catch (error: any) {
+        console.log(error.response?.data)
         res.status(500).json({ error: "Something went wrong"})
     }
 })

@@ -3,6 +3,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import placesRouter from './routes/places'
 import geocodingRouter from './routes/geocoding'
+import weatherRouter from './routes/weather'
+import adaptationRouter from './routes/adapt'
 
 dotenv.config()
 
@@ -11,6 +13,8 @@ app.use(cors())
 app.use(express.json())
 app.use('/api/places', placesRouter)
 app.use('/api/geocoding', geocodingRouter)
+app.use('/api/weather', weatherRouter)
+app.use('/api/adapt', adaptationRouter)
 
 app.get("/health", (req, res) => {
     res.json({ status: 'ok'})
