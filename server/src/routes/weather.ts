@@ -12,7 +12,7 @@ router.get('/forecast', async (req, res) => {
                     'latitude': lat,
                     'longitude': lng,
                     daily: 'weathercode,precipitation_sum,temperature_2m_max,precipitation_probability_max',
-                    forecastDays: days,
+                    forecast_days: days,
                     timezone: 'auto'
                 }
             }
