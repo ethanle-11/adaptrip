@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
@@ -14,7 +14,6 @@ function TripDetail() {
     const [activities, setActivities] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const navigate = useNavigate()
     const [openDays, setOpenDays] = useState<Set<number>>(new Set())
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
     const [searchResults, setSearchResults] = useState([])
@@ -22,6 +21,7 @@ function TripDetail() {
     const [debouncedQuery] = useDebounce(searchQuery, 500)
     const map = useMap()
     const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
+    const [recommendations, setRecommendations] = useState([])
 
     const [editActivity, setEditActivity] = useState({
         start_time: '',
@@ -142,9 +142,7 @@ function TripDetail() {
         }
     }
 
-    
-
-    // fetch trips effect
+    // Fetch trips effect
 
     useEffect(() => {
 
@@ -207,6 +205,19 @@ function TripDetail() {
         }
     }, [map, trip])
 
+    // Calls adaptation engine
+
+    const runAdaptation = async () => {
+
+        try {
+            const adaptResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/adapt/${id}`)
+
+            setRecommendations(adaptResponse.data.recommendations)
+        } catch (error) {
+            setError('Something went wrong.')
+        }
+    }
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
     
@@ -219,10 +230,14 @@ function TripDetail() {
             <Navbar />
             <div className="flex flex-1 overflow-hidden">
                 <div className="w-1/2 overflow-y-auto p-6">
-                    <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:underline mb-4 cursor-pointer">← Back to Trips</button> 
                     <h1 className="text-3xl font-bold">{trip?.title}</h1>
-                    <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
-
+                    <div className="flex justify-between items-center pb-4">
+                        <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
+                        <button onClick={runAdaptation} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer">
+                            Get Recommendations
+                        </button>
+                    </div>
+                    
                     {days.map((day, index) => (
                         <div key={index} className="mb-6 bg-white rounded-xl shadow p-4">
                             <div onClick={() => toggleDay(index)}
