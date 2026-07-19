@@ -22,6 +22,7 @@ function TripDetail() {
     const map = useMap()
     const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
     const [recommendations, setRecommendations] = useState([])
+    const [showRecommendationPanel, setShowRecommendationPanel] = useState(false)
 
     const [editActivity, setEditActivity] = useState({
         start_time: '',
@@ -142,6 +143,25 @@ function TripDetail() {
         }
     }
 
+    // Swap Activity Function
+
+    const handleSwapActivity = async (recommendation, alternative) => {
+
+        try {
+            // Updates affected activity to alternative's day
+            await supabase.from('activities').update({ day_index: alternative.day_index }).eq('id', recommendation.affectedActivity.id)
+
+            // Updates alternative day to affected activity day
+            await supabase.from('activities').update({ day_index: recommendation.affectedActivity.day_index }).eq('id', alternative.id)
+
+            fetchActivities()
+
+            setRecommendations(prev => prev.filter(rec => rec.affectedActivity.id !== recommendation.affectedActivity.id))
+        } catch (error) {
+            setError('Failed to swap activities.')
+        }
+    }
+
     // Fetch trips effect
 
     useEffect(() => {
@@ -213,6 +233,7 @@ function TripDetail() {
             const adaptResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/adapt/${id}`)
 
             setRecommendations(adaptResponse.data.recommendations)
+            setShowRecommendationPanel(true)
         } catch (error) {
             setError('Something went wrong.')
         }
@@ -397,6 +418,31 @@ function TripDetail() {
                             />
                         ))}
                     </Map>
+
+                    {showRecommendationPanel && (
+                        <div className="absolute inset-0 bg-white z-10 overflow-y-auto p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Possible Adjustments</h2>
+                                <button onClick={() => setShowRecommendationPanel(false)}>✕</button>
+                            </div>
+
+                            {recommendations.length === 0 ? (
+                                <p className="text-gray-500">Your trip looks good!</p>
+                            ) : (
+                                recommendations.map(recommendation => (
+                                    <div>
+                                       <h2>⚠ Day {recommendation.dayIndex + 1} - {recommendation.reason}</h2>
+                                        <h3>Affected: {recommendation.affectedActivity.title} ({recommendation.affectedActivity.category})</h3>
+                                        <p>Suggest Alternatives:</p>
+                                        {recommendation.suggestedAlternatives.map(alternative => (
+                                            <div onClick={() => handleSwapActivity(recommendation, alternative)}>- {alternative.title} ({alternative.category})</div>
+                                        ))} 
+                                    </div>
+                                    
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
