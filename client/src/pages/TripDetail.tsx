@@ -403,7 +403,7 @@ function TripDetail() {
                         </div>
                     ))}
                 </div>
-                <div className="w-1/2 sticky top-0 h-full">
+                <div className="w-1/2 relative sticky top-0 h-full">
                     <Map
                         mapId="adaptrip-map" 
                         style={{ height: '100%', width: '100%', borderRadius: '12px' }}
@@ -430,12 +430,12 @@ function TripDetail() {
                                 <p className="text-gray-500">Your trip looks good!</p>
                             ) : (
                                 recommendations.map(recommendation => (
-                                    <div>
+                                    <div key={recommendation.affectedActivity.id}>
                                        <h2>⚠ Day {recommendation.dayIndex + 1} - {recommendation.reason}</h2>
                                         <h3>Affected: {recommendation.affectedActivity.title} ({recommendation.affectedActivity.category})</h3>
                                         <p>Suggest Alternatives:</p>
                                         {recommendation.suggestedAlternatives.map(alternative => (
-                                            <div onClick={() => handleSwapActivity(recommendation, alternative)}>- {alternative.title} ({alternative.category})</div>
+                                            <div key={alternative.id} onClick={() => handleSwapActivity(recommendation, alternative)}>- {alternative.title} ({alternative.category})</div>
                                         ))} 
                                     </div>
                                     
