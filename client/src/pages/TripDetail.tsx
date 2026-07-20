@@ -423,20 +423,52 @@ function TripDetail() {
                         <div className="absolute inset-0 bg-white z-10 overflow-y-auto p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold">Possible Adjustments</h2>
-                                <button onClick={() => setShowRecommendationPanel(false)}>✕</button>
+                                <button 
+                                    onClick={() => setShowRecommendationPanel(false)}
+                                    className="text-gray-400 hover:text-gray-600 text-lg cursor-pointer"
+                                    >✕</button>
                             </div>
 
                             {recommendations.length === 0 ? (
-                                <p className="text-gray-500">Your trip looks good!</p>
+                                <div className="flex flex-col items-center justify-center h-48 text-center">
+                                    <p className="text-gray-500 font-medium">Your trip looks good!</p>
+                                </div>
+                                
                             ) : (
                                 recommendations.map(recommendation => (
-                                    <div key={recommendation.affectedActivity.id}>
-                                       <h2>⚠ Day {recommendation.dayIndex + 1} - {recommendation.reason}</h2>
-                                        <h3>Affected: {recommendation.affectedActivity.title} ({recommendation.affectedActivity.category})</h3>
-                                        <p>Suggest Alternatives:</p>
-                                        {recommendation.suggestedAlternatives.map(alternative => (
-                                            <div key={alternative.id} onClick={() => handleSwapActivity(recommendation, alternative)}>- {alternative.title} ({alternative.category})</div>
-                                        ))} 
+                                    <div key={recommendation.affectedActivity.id} className="border border-gray-200 rounded-xl p-4">
+                                        {/* Day and Reason */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="text-orange-500">⚠</span>
+                                            <p className="font-semibold text-sm">Day {recommendation.dayIndex + 1}</p>
+                                            <span className="text-gray-400 text-xs">- {recommendation.reason}</span>
+                                        </div>
+
+                                        {/* Affected Activitiy */}
+                                        <div className="bg-red-50 rounded-lg px-3 py-2 mb-3">
+                                            <p className="text-xs text-red-400 font-medium mb-1">Affected Activity</p>
+                                            <p className="text-sm font-medium">{recommendation.affectedActivity.title}</p>
+                                            <span className="text-xs text-gray-400 capitalize">{recommendation.affectedActivity.category}</span>
+                                        </div>
+                                       
+                                       {/* Alternatives */}
+                                        <p className="text-xs text-gray-500 font-medium mb-2">Swap with:</p>
+                                        <div className="flex flex-col gap-2">
+                                            {recommendation.suggestedAlternatives.length === 0 ? (
+                                                <p className="text-xs text-gray-400">No nearby alternatives found</p>
+                                            ) : (
+                                                recommendation.suggestedAlternatives.map(alternative => (
+                                                    <div
+                                                        key={alternative.id}
+                                                        onClick={() => handleSwapActivity(recommendation, alternative)}
+                                                        className="bg-teal-50 border border-teal-100 rounded-lg px-3 py-2 cursor-pointer hover:bg-teal-100 transition"
+                                                    >
+                                                        <p className="text-sm font-medium">{alternative.title}</p>
+                                                        <span className="text-xs text-gray-400 capitalize">{alternative.category}</span>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
                                     </div>
                                     
                                 ))
