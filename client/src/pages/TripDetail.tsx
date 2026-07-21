@@ -15,15 +15,23 @@ function TripDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [openDays, setOpenDays] = useState<Set<number>>(new Set())
+
+    // Activity search state
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
     const [searchResults, setSearchResults] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery] = useDebounce(searchQuery, 500)
     const map = useMap()
     const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
+
+    // Recommendation state
     const [recommendations, setRecommendations] = useState([])
     const [showRecommendationPanel, setShowRecommendationPanel] = useState(false)
 
+    // Editing state
+    const [titleEditing, setTitleEditing] = useState(false)
+    const [dateEditing, setDateEditing] = useState(false)
+    const [editedTitle, setEditedTitle] = useState('')
     const [editActivity, setEditActivity] = useState({
         start_time: '',
         duration: null as number | null,
@@ -239,6 +247,14 @@ function TripDetail() {
         }
     }
 
+    // Update edited title
+
+    const handleSaveTitle = async () => {
+        await supabase.from('trips').update({ title: editedTitle}).eq('id', id)
+        setTrip(prev => ({ ...prev, title: editedTitle}))
+        setTitleEditing(false)
+    }
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
     
@@ -251,7 +267,29 @@ function TripDetail() {
             <Navbar />
             <div className="flex flex-1 overflow-hidden">
                 <div className="w-1/2 overflow-y-auto p-6">
-                    <h1 className="text-3xl font-bold">{trip?.title}</h1>
+                    {titleEditing === true ? (
+                        <input
+                            className="text-3xl font-bold outline-none bg-transparent w-full" 
+                            value={editedTitle} 
+                            onChange={(e) => setEditedTitle(e.target.value)}
+                            onBlur={() => handleSaveTitle()}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveTitle()
+                                if (e.key === "Escape") setTitleEditing(false)
+                            }}
+                            autoFocus
+                        />
+                    ) : (
+                        <h1 className="text-3xl font-bold hover:bg-gray-100 rounded px-1 cursor-text inline-block" 
+                            onClick={() => {
+                                setTitleEditing(true)
+                                setEditedTitle(trip?.title || '')
+                            }}
+                        >
+                            {trip?.title}
+                        </h1>
+                    )}
+                    
                     <div className="flex justify-between items-center pb-4">
                         <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
                         <button onClick={runAdaptation} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer">
