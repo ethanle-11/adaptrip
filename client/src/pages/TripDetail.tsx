@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
@@ -14,7 +14,6 @@ function TripDetail() {
     const [activities, setActivities] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const navigate = useNavigate()
     const [openDays, setOpenDays] = useState<Set<number>>(new Set())
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
     const [searchResults, setSearchResults] = useState([])
@@ -22,6 +21,8 @@ function TripDetail() {
     const [debouncedQuery] = useDebounce(searchQuery, 500)
     const map = useMap()
     const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
+    const [recommendations, setRecommendations] = useState([])
+    const [showRecommendationPanel, setShowRecommendationPanel] = useState(false)
 
     const [editActivity, setEditActivity] = useState({
         start_time: '',
@@ -142,9 +143,26 @@ function TripDetail() {
         }
     }
 
-    
+    // Swap Activity Function
 
-    // fetch trips effect
+    const handleSwapActivity = async (recommendation, alternative) => {
+
+        try {
+            // Updates affected activity to alternative's day
+            await supabase.from('activities').update({ day_index: alternative.day_index }).eq('id', recommendation.affectedActivity.id)
+
+            // Updates alternative day to affected activity day
+            await supabase.from('activities').update({ day_index: recommendation.affectedActivity.day_index }).eq('id', alternative.id)
+
+            fetchActivities()
+
+            setRecommendations(prev => prev.filter(rec => rec.affectedActivity.id !== recommendation.affectedActivity.id))
+        } catch (error) {
+            setError('Failed to swap activities.')
+        }
+    }
+
+    // Fetch trips effect
 
     useEffect(() => {
 
@@ -207,6 +225,20 @@ function TripDetail() {
         }
     }, [map, trip])
 
+    // Calls adaptation engine
+
+    const runAdaptation = async () => {
+
+        try {
+            const adaptResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/adapt/${id}`)
+
+            setRecommendations(adaptResponse.data.recommendations)
+            setShowRecommendationPanel(true)
+        } catch (error) {
+            setError('Something went wrong.')
+        }
+    }
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
     
@@ -219,10 +251,14 @@ function TripDetail() {
             <Navbar />
             <div className="flex flex-1 overflow-hidden">
                 <div className="w-1/2 overflow-y-auto p-6">
-                    <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:underline mb-4 cursor-pointer">← Back to Trips</button> 
                     <h1 className="text-3xl font-bold">{trip?.title}</h1>
-                    <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
-
+                    <div className="flex justify-between items-center pb-4">
+                        <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
+                        <button onClick={runAdaptation} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer">
+                            Get Recommendations
+                        </button>
+                    </div>
+                    
                     {days.map((day, index) => (
                         <div key={index} className="mb-6 bg-white rounded-xl shadow p-4">
                             <div onClick={() => toggleDay(index)}
@@ -367,7 +403,7 @@ function TripDetail() {
                         </div>
                     ))}
                 </div>
-                <div className="w-1/2 sticky top-0 h-full">
+                <div className="w-1/2 relative sticky top-0 h-full">
                     <Map
                         mapId="adaptrip-map" 
                         style={{ height: '100%', width: '100%', borderRadius: '12px' }}
@@ -382,6 +418,63 @@ function TripDetail() {
                             />
                         ))}
                     </Map>
+
+                    {showRecommendationPanel && (
+                        <div className="absolute inset-0 bg-white z-10 overflow-y-auto p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Possible Adjustments</h2>
+                                <button 
+                                    onClick={() => setShowRecommendationPanel(false)}
+                                    className="text-gray-400 hover:text-gray-600 text-lg cursor-pointer"
+                                    >✕</button>
+                            </div>
+
+                            {recommendations.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-48 text-center">
+                                    <p className="text-gray-500 font-medium">Your trip looks good!</p>
+                                </div>
+                                
+                            ) : (
+                                recommendations.map(recommendation => (
+                                    <div key={recommendation.affectedActivity.id} className="border border-gray-200 rounded-xl p-4">
+                                        {/* Day and Reason */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="text-orange-500">⚠</span>
+                                            <p className="font-semibold text-sm">Day {recommendation.dayIndex + 1}</p>
+                                            <span className="text-gray-400 text-xs">- {recommendation.reason}</span>
+                                        </div>
+
+                                        {/* Affected Activitiy */}
+                                        <div className="bg-red-50 rounded-lg px-3 py-2 mb-3">
+                                            <p className="text-xs text-red-400 font-medium mb-1">Affected Activity</p>
+                                            <p className="text-sm font-medium">{recommendation.affectedActivity.title}</p>
+                                            <span className="text-xs text-gray-400 capitalize">{recommendation.affectedActivity.category}</span>
+                                        </div>
+                                       
+                                       {/* Alternatives */}
+                                        <p className="text-xs text-gray-500 font-medium mb-2">Swap with:</p>
+                                        <div className="flex flex-col gap-2">
+                                            {recommendation.suggestedAlternatives.length === 0 ? (
+                                                <p className="text-xs text-gray-400">No nearby alternatives found</p>
+                                            ) : (
+                                                recommendation.suggestedAlternatives.map(alternative => (
+                                                    <div
+                                                        key={alternative.id}
+                                                        onClick={() => handleSwapActivity(recommendation, alternative)}
+                                                        className="bg-teal-50 border border-teal-100 rounded-lg px-3 py-2 cursor-pointer hover:bg-teal-100 transition"
+                                                    >
+                                                        <p className="text-sm font-medium">{alternative.title}</p>
+                                                        <span className="text-xs text-gray-400 capitalize">{alternative.category}</span>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
