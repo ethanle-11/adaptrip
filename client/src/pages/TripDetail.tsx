@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
+import { DayPicker, type DateRange} from 'react-day-picker'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { useDebounce } from 'use-debounce'
 import axios from 'axios'
@@ -30,7 +31,8 @@ function TripDetail() {
 
     // Editing state
     const [titleEditing, setTitleEditing] = useState(false)
-    const [dateEditing, setDateEditing] = useState(false)
+    const [showCalendar, setShowCalendar] = useState(false)
+    const [dateRange, setDateRange] = useState<DateRange | undefined> (undefined)
     const [editedTitle, setEditedTitle] = useState('')
     const [editActivity, setEditActivity] = useState({
         start_time: '',
@@ -255,6 +257,23 @@ function TripDetail() {
         setTitleEditing(false)
     }
 
+    // Update edited dates
+
+    const handleSaveDate = async () => {
+        await supabase
+            .from('trips')
+            .update({
+                start_date: dateRange?.from?.toISOString().split('T')[0], 
+                end_date: dateRange?.to?.toISOString().split('T')[0], 
+            })
+            .eq('id', id)
+        setTrip(prev => ({ ...prev, 
+            start_date: dateRange?.from?.toISOString().split('T')[0], 
+            end_date: dateRange?.to?.toISOString().split('T')[0] 
+        }))
+        setShowCalendar(false)
+    }
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
     
@@ -291,7 +310,41 @@ function TripDetail() {
                     )}
                     
                     <div className="flex justify-between items-center pb-4">
-                        <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
+                        <div>
+                            <p className="text-gray-500">{trip?.destination}</p>
+                            <p 
+                                className="text-gray-500 hover:bg-gray-100 rounded px-1 inline-block cursor-pointer"
+                                onClick={() => {
+                                    setShowCalendar(!showCalendar)
+                                    setDateRange({
+                                        from: new Date(trip?.start_date),
+                                        to: new Date(trip?.end_date)
+                                    })
+                                }}
+                            >
+                                {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}
+                            </p>
+
+                            {showCalendar && (
+                                    <div className="absolute z-10 bg-white shadow-lg rounded-xl mt-1">
+                                        <DayPicker
+                                            mode="range"
+                                            selected={dateRange}
+                                            onSelect={setDateRange}
+                                            disabled={{ before: new Date()}}
+                                        />
+                                        <button
+                                            onClick={handleSaveDate}
+                                            className="w-full bg-teal-600 text-white py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer mt-2"
+                                        >
+                                            Confirm Dates
+                                        </button>
+                                    </div>
+                            )}
+
+                            
+                        </div>
+                        
                         <button onClick={runAdaptation} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer">
                             Get Recommendations
                         </button>
