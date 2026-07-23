@@ -400,7 +400,7 @@ function TripDetail() {
                                                             e.stopPropagation()
                                                             handleDeleteActivity(activity.id)
                                                         }} 
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">✖
+                                                        className="opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer hover:scale-125">✖
                                                     </button>
                                                 </div>
 
