@@ -91,7 +91,7 @@ function TripDetail() {
 
     const handleSelectPlace = async (place: any) => {
         try {
-            await supabase
+            const { error: insertError } = await supabase
             .from('activities')
             .insert({   
                 trip_id: id,
@@ -101,6 +101,8 @@ function TripDetail() {
                 address: place.formattedAddress,
                 day_index: searchingDayIndex
             })
+
+            if (insertError) throw insertError
 
             await fetchActivities()
 
@@ -117,10 +119,12 @@ function TripDetail() {
 
     const handleDeleteActivity = async (activityId: string) => {
         try {
-            await supabase
+            const { error: deleteError } = await supabase
             .from('activities')
             .delete()
             .eq('id', activityId)
+
+            if (deleteError) throw deleteError
 
             await fetchActivities()
 
@@ -135,7 +139,7 @@ function TripDetail() {
         if (!expandedActivityId) return
 
         try {
-            await supabase
+            const {error: updateError } = await supabase
             .from('activities')
             .update({
                 start_time: editActivity.start_time || null,
@@ -144,6 +148,8 @@ function TripDetail() {
                 priority: editActivity.priority
             })
             .eq('id', expandedActivityId)
+
+            if (updateError) throw updateError
 
             await fetchActivities()
 
@@ -159,10 +165,12 @@ function TripDetail() {
 
         try {
             // Updates affected activity to alternative's day
-            await supabase.from('activities').update({ day_index: alternative.day_index }).eq('id', recommendation.affectedActivity.id)
+            const { error: swapError1 } = await supabase.from('activities').update({ day_index: alternative.day_index }).eq('id', recommendation.affectedActivity.id)
+            if (swapError1) throw swapError1
 
             // Updates alternative day to affected activity day
-            await supabase.from('activities').update({ day_index: recommendation.affectedActivity.day_index }).eq('id', alternative.id)
+            const { error: swapError2 } = await supabase.from('activities').update({ day_index: recommendation.affectedActivity.day_index }).eq('id', alternative.id)
+            if (swapError2) throw swapError2
 
             fetchActivities()
 
@@ -252,26 +260,38 @@ function TripDetail() {
     // Update edited title
 
     const handleSaveTitle = async () => {
-        await supabase.from('trips').update({ title: editedTitle}).eq('id', id)
-        setTrip(prev => ({ ...prev, title: editedTitle}))
-        setTitleEditing(false)
+        try {
+            const { error: saveTitleError } = await supabase.from('trips').update({ title: editedTitle}).eq('id', id)
+            if (saveTitleError) throw saveTitleError
+            setTrip(prev => ({ ...prev, title: editedTitle}))
+            setTitleEditing(false)
+        } catch (error) {
+            setError('Failed to set title')
+        }
+        
     }
 
     // Update edited dates
 
     const handleSaveDate = async () => {
-        await supabase
-            .from('trips')
-            .update({
+        try {
+            const {error: saveDateError } = await supabase
+                .from('trips')
+                .update({
+                    start_date: dateRange?.from?.toISOString().split('T')[0], 
+                    end_date: dateRange?.to?.toISOString().split('T')[0], 
+                })
+                .eq('id', id)
+            if (saveDateError) throw saveDateError
+            setTrip(prev => ({ ...prev, 
                 start_date: dateRange?.from?.toISOString().split('T')[0], 
-                end_date: dateRange?.to?.toISOString().split('T')[0], 
-            })
-            .eq('id', id)
-        setTrip(prev => ({ ...prev, 
-            start_date: dateRange?.from?.toISOString().split('T')[0], 
-            end_date: dateRange?.to?.toISOString().split('T')[0] 
-        }))
-        setShowCalendar(false)
+                end_date: dateRange?.to?.toISOString().split('T')[0] 
+            }))
+            setShowCalendar(false)
+        } catch (error) {
+            setError('Failed to set dates')
+        }
+        
     }
 
 
