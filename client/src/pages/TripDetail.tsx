@@ -317,8 +317,8 @@ function TripDetail() {
                                 onClick={() => {
                                     setShowCalendar(!showCalendar)
                                     setDateRange({
-                                        from: new Date(trip?.start_date),
-                                        to: new Date(trip?.end_date)
+                                        from: new Date(trip?.start_date + 'T00:00'),
+                                        to: new Date(trip?.end_date + 'T00:00')
                                     })
                                 }}
                             >
@@ -356,7 +356,7 @@ function TripDetail() {
                                 className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-xl"
                             >
                                 <h2 className="text-lg font-semibold">
-                                    Day {index + 1} <span className='text-gray-400 font-normal'>- {formatDate(day.toISOString())}</span>
+                                    Day {index + 1} <span className='text-gray-400 font-normal'>- {formatDate(day.toISOString().split('T')[0])}</span>
                                 </h2>
                                 <span className="text-gray-400">{openDays.has(index) ? '▼' : '◀'}</span>
                             </div>

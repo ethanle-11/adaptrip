@@ -2,7 +2,7 @@
 // Format Date Function
 
 export const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString + 'T00:00')
     return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
@@ -11,8 +11,8 @@ export const formatDate = (dateString: string) => {
 
 export const getDaysBetween = (start: string, end: string): Date[] => {
     const days: Date[] = []
-    const startDate = new Date(start)
-    const endDate = new Date(end)
+    const startDate = new Date(start + 'T00:00')
+    const endDate = new Date(end + 'T00:00')
 
     while (startDate <= endDate) {
         days.push(new Date(startDate))

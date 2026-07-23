@@ -29,17 +29,17 @@ export const runAdaptation = (activities: Activity[], forecast: ForecastDay[], s
     if (activities.length === 0 || forecast.length === 0) return []
 
     // Check if trip dates fall in projected forecast
-    const tripStart = new Date(startDate)
-    const tripEnd = new Date(endDate)
+    const tripStart = new Date(startDate + 'T00:00')
+    const tripEnd = new Date(endDate + 'T00:00')
     const tripForecast = forecast.filter(day => {
-        const forecastDate = new Date(day.date)
+        const forecastDate = new Date(day.date + 'T00:00')
         return forecastDate >= tripStart && forecastDate <= tripEnd
     })
 
     const recommendations: Recommendation[] = []
     for (const day of tripForecast) {
         if((day.weatherCode >= 51 && day.weatherCode <= 99) || day.precipitationProbability > 50) {
-            const forecastDate = new Date(day.date)
+            const forecastDate = new Date(day.date + 'T00:00')
             const dayIndex = Math.round((forecastDate.getTime() - tripStart.getTime()) / 86400000)
             const affectedActivities = activities.filter(activity => {
                 return activity.day_index === dayIndex && activity.category === 'outdoor'
