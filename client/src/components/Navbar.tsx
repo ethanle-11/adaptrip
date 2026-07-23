@@ -23,12 +23,9 @@ function Navbar() {
 
     return (
         <nav className="bg-white shadow px-6 py-4 flex justify-between items-center">
-            <h1 className="text-xl font-bold">AdapTrip</h1>
-            <div>
-                <button onClick={() => navigate('/dashboard')} className="border-b-2 border-transparent text-slate-700 font-bold transition-colors hover:border-teal-600 hover:text-teal-600 cursor-pointer">
-                    Home
-                </button>
-            </div>
+            <button onClick={() => navigate('/dashboard')} className="text-xl text-slate-700 font-bold transition-colors hover:text-teal-600 cursor-pointer">
+                AdapTrip
+            </button>            
             <div className="flex items-center gap-4">
                 <span className="font-bold text-slate-700">{userName}</span>
                 <button onClick={handleLogout} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer">
