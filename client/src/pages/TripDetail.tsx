@@ -295,7 +295,36 @@ function TripDetail() {
     }
 
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
+    if (loading) return (
+        <div className="h-screen flex flex-col overflow-hidden">
+        <Navbar />
+        <div className="flex flex-1 overflow-hidden">
+            {/* Left column skeleton */}
+            <div className="w-1/2 overflow-y-auto p-6">
+                {/* Title */}
+                <div className="h-9 w-2/3 bg-gray-200 rounded animate-pulse mb-2" />
+                {/* Destination and dates */}
+                <div className="flex justify-between items-center pb-4">
+                    <div>
+                        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-2" />
+                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                    <div className="h-9 w-36 bg-gray-200 rounded animate-pulse" />
+                </div>
+                {/* Day cards */}
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="animate-pulse bg-white rounded-xl shadow p-4 mb-6">
+                        <div className="h-5 w-1/3 bg-gray-200 rounded" />
+                    </div>
+                ))}
+            </div>
+            {/* Right column - map skeleton */}
+            <div className="w-1/2 bg-gray-200 animate-pulse" />
+        </div>
+    </div>
+    ) 
+
+    
     
     if (error) return <div className="min-h-screen flex items-center justify-center"><h1>There's a problem loading this page.</h1></div>
 
