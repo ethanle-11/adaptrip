@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import { formatDate, getDaysBetween } from '../lib/utils'
+import { DayPicker, type DateRange} from 'react-day-picker'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { useDebounce } from 'use-debounce'
 import axios from 'axios'
@@ -15,15 +16,24 @@ function TripDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [openDays, setOpenDays] = useState<Set<number>>(new Set())
+
+    // Activity search state
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
     const [searchResults, setSearchResults] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery] = useDebounce(searchQuery, 500)
     const map = useMap()
     const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
+
+    // Recommendation state
     const [recommendations, setRecommendations] = useState([])
     const [showRecommendationPanel, setShowRecommendationPanel] = useState(false)
 
+    // Editing state
+    const [titleEditing, setTitleEditing] = useState(false)
+    const [showCalendar, setShowCalendar] = useState(false)
+    const [dateRange, setDateRange] = useState<DateRange | undefined> (undefined)
+    const [editedTitle, setEditedTitle] = useState('')
     const [editActivity, setEditActivity] = useState({
         start_time: '',
         duration: null as number | null,
@@ -81,7 +91,7 @@ function TripDetail() {
 
     const handleSelectPlace = async (place: any) => {
         try {
-            await supabase
+            const { error: insertError } = await supabase
             .from('activities')
             .insert({   
                 trip_id: id,
@@ -91,6 +101,8 @@ function TripDetail() {
                 address: place.formattedAddress,
                 day_index: searchingDayIndex
             })
+
+            if (insertError) throw insertError
 
             await fetchActivities()
 
@@ -107,10 +119,12 @@ function TripDetail() {
 
     const handleDeleteActivity = async (activityId: string) => {
         try {
-            await supabase
+            const { error: deleteError } = await supabase
             .from('activities')
             .delete()
             .eq('id', activityId)
+
+            if (deleteError) throw deleteError
 
             await fetchActivities()
 
@@ -125,7 +139,7 @@ function TripDetail() {
         if (!expandedActivityId) return
 
         try {
-            await supabase
+            const {error: updateError } = await supabase
             .from('activities')
             .update({
                 start_time: editActivity.start_time || null,
@@ -134,6 +148,8 @@ function TripDetail() {
                 priority: editActivity.priority
             })
             .eq('id', expandedActivityId)
+
+            if (updateError) throw updateError
 
             await fetchActivities()
 
@@ -149,10 +165,12 @@ function TripDetail() {
 
         try {
             // Updates affected activity to alternative's day
-            await supabase.from('activities').update({ day_index: alternative.day_index }).eq('id', recommendation.affectedActivity.id)
+            const { error: swapError1 } = await supabase.from('activities').update({ day_index: alternative.day_index }).eq('id', recommendation.affectedActivity.id)
+            if (swapError1) throw swapError1
 
             // Updates alternative day to affected activity day
-            await supabase.from('activities').update({ day_index: recommendation.affectedActivity.day_index }).eq('id', alternative.id)
+            const { error: swapError2 } = await supabase.from('activities').update({ day_index: recommendation.affectedActivity.day_index }).eq('id', alternative.id)
+            if (swapError2) throw swapError2
 
             fetchActivities()
 
@@ -239,6 +257,43 @@ function TripDetail() {
         }
     }
 
+    // Update edited title
+
+    const handleSaveTitle = async () => {
+        try {
+            const { error: saveTitleError } = await supabase.from('trips').update({ title: editedTitle}).eq('id', id)
+            if (saveTitleError) throw saveTitleError
+            setTrip(prev => ({ ...prev, title: editedTitle}))
+            setTitleEditing(false)
+        } catch (error) {
+            setError('Failed to set title')
+        }
+        
+    }
+
+    // Update edited dates
+
+    const handleSaveDate = async () => {
+        try {
+            const {error: saveDateError } = await supabase
+                .from('trips')
+                .update({
+                    start_date: dateRange?.from?.toISOString().split('T')[0], 
+                    end_date: dateRange?.to?.toISOString().split('T')[0], 
+                })
+                .eq('id', id)
+            if (saveDateError) throw saveDateError
+            setTrip(prev => ({ ...prev, 
+                start_date: dateRange?.from?.toISOString().split('T')[0], 
+                end_date: dateRange?.to?.toISOString().split('T')[0] 
+            }))
+            setShowCalendar(false)
+        } catch (error) {
+            setError('Failed to set dates')
+        }
+        
+    }
+
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
     
@@ -251,9 +306,65 @@ function TripDetail() {
             <Navbar />
             <div className="flex flex-1 overflow-hidden">
                 <div className="w-1/2 overflow-y-auto p-6">
-                    <h1 className="text-3xl font-bold">{trip?.title}</h1>
+                    {titleEditing === true ? (
+                        <input
+                            className="text-3xl font-bold outline-none bg-transparent w-full" 
+                            value={editedTitle} 
+                            onChange={(e) => setEditedTitle(e.target.value)}
+                            onBlur={() => handleSaveTitle()}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveTitle()
+                                if (e.key === "Escape") setTitleEditing(false)
+                            }}
+                            autoFocus
+                        />
+                    ) : (
+                        <h1 className="text-3xl font-bold hover:bg-gray-100 rounded px-1 cursor-text inline-block" 
+                            onClick={() => {
+                                setTitleEditing(true)
+                                setEditedTitle(trip?.title || '')
+                            }}
+                        >
+                            {trip?.title}
+                        </h1>
+                    )}
+                    
                     <div className="flex justify-between items-center pb-4">
-                        <p className="text-gray-500">{trip?.destination} • {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}</p>
+                        <div>
+                            <p className="text-gray-500">{trip?.destination}</p>
+                            <p 
+                                className="text-gray-500 hover:bg-gray-100 rounded px-1 inline-block cursor-pointer"
+                                onClick={() => {
+                                    setShowCalendar(!showCalendar)
+                                    setDateRange({
+                                        from: new Date(trip?.start_date + 'T00:00'),
+                                        to: new Date(trip?.end_date + 'T00:00')
+                                    })
+                                }}
+                            >
+                                {formatDate(trip?.start_date)} → {formatDate(trip?.end_date)}
+                            </p>
+
+                            {showCalendar && (
+                                    <div className="absolute z-10 bg-white shadow-lg rounded-xl mt-1">
+                                        <DayPicker
+                                            mode="range"
+                                            selected={dateRange}
+                                            onSelect={setDateRange}
+                                            disabled={{ before: new Date()}}
+                                        />
+                                        <button
+                                            onClick={handleSaveDate}
+                                            className="w-full bg-teal-600 text-white py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer mt-2"
+                                        >
+                                            Confirm Dates
+                                        </button>
+                                    </div>
+                            )}
+
+                            
+                        </div>
+                        
                         <button onClick={runAdaptation} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:brightness-95 cursor-pointer">
                             Get Recommendations
                         </button>
@@ -265,7 +376,7 @@ function TripDetail() {
                                 className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 rounded-xl"
                             >
                                 <h2 className="text-lg font-semibold">
-                                    Day {index + 1} <span className='text-gray-400 font-normal'>- {formatDate(day.toISOString())}</span>
+                                    Day {index + 1} <span className='text-gray-400 font-normal'>- {formatDate(day.toISOString().split('T')[0])}</span>
                                 </h2>
                                 <span className="text-gray-400">{openDays.has(index) ? '▼' : '◀'}</span>
                             </div>
@@ -289,7 +400,7 @@ function TripDetail() {
                                                             e.stopPropagation()
                                                             handleDeleteActivity(activity.id)
                                                         }} 
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">✖
+                                                        className="opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer hover:scale-125">✖
                                                     </button>
                                                 </div>
 
