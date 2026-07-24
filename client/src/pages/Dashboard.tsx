@@ -68,7 +68,7 @@ function Dashboard() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         {trips.map((trip) => (
-                            <div key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)} className="flex justify-between bg-white rounded-xl shadow p-5 hover:shadow-md transition group cursor-pointer">
+                            <div key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)} className="flex justify-between bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition group cursor-pointer">
                                 <div>
                                     <h3 className="text-lg font-semibold">{trip.title}</h3>
                                     <p className="text-gray-500 text-sm">{trip.destination}</p>
