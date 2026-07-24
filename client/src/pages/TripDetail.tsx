@@ -187,7 +187,6 @@ function TripDetail() {
 
         const fetchTripData = async () => {
             try {
-                await new Promise(resolve => setTimeout(resolve, 2000))
                 const { data, error } = await supabase.from('trips').select('*').eq('id', id).single()
                 if (error) throw error
                 setTrip(data)
