@@ -47,7 +47,27 @@ function Dashboard() {
         fetchTrips()    
     }, [])
     
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><h1>Loading...</h1></div>
+    if (loading) return (
+        <div>
+            <Navbar />
+            <main className="max-w-4xl mx-auto p-6">
+                <div className="flex justify-between">
+                    <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    {Array.from({ length: 4}).map((_, i) => (
+                        <div key={i} className="animate-pulse bg-white rounded-xl shadow p-5">
+                            <div className="h-5 w-3/4 bg-gray-200 rounded mb-3" />
+                            <div className="h-4 w-1/2 bg-gray-200 rounded mb-2" />
+                            <div className="h-3 w-1/3 bg-gray-200 rounded" />
+                        </div>
+                    ))}
+                </div>
+
+            </main>
+        </div>
+    )
     
     if (error) return <div className="min-h-screen flex items-center justify-center"><h1>There's a problem loading this page.</h1></div>
 
