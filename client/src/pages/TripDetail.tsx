@@ -12,21 +12,21 @@ import axios from 'axios'
 function TripDetail() {
     const { id } = useParams()
     const [trip, setTrip] = useState(null)
-    const [activities, setActivities] = useState([])
+    const [activities, setActivities] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [openDays, setOpenDays] = useState<Set<number>>(new Set())
 
     // Activity search state
     const [searchingDayIndex, setSearchingDayIndex] = useState<number | null>(null)
-    const [searchResults, setSearchResults] = useState([])
+    const [searchResults, setSearchResults] = useState<any[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery] = useDebounce(searchQuery, 500)
     const map = useMap()
     const [expandedActivityId, setExpandedActivityId] = useState<string | null> (null)
 
     // Recommendation state
-    const [recommendations, setRecommendations] = useState([])
+    const [recommendations, setRecommendations] = useState<any[]>([])
     const [showRecommendationPanel, setShowRecommendationPanel] = useState(false)
 
     // Editing state
