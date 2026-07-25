@@ -11,7 +11,7 @@ import axios from 'axios'
 
 function TripDetail() {
     const { id } = useParams()
-    const [trip, setTrip] = useState(null)
+    const [trip, setTrip] = useState<any>(null)
     const [activities, setActivities] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
@@ -161,7 +161,7 @@ function TripDetail() {
 
     // Swap Activity Function
 
-    const handleSwapActivity = async (recommendation, alternative) => {
+    const handleSwapActivity = async (recommendation: any, alternative: any) => {
 
         try {
             // Updates affected activity to alternative's day
