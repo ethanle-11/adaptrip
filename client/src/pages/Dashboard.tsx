@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar'
 import { formatDate  } from '../lib/utils'
 
 function Dashboard() {
-    const [trips, setTrips] = useState([])
+    const [trips, setTrips] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const navigate = useNavigate()

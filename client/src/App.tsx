@@ -7,8 +7,8 @@ import Register from './pages/Register';
 import CreateTrip from './pages/CreateTrip';
 import TripDetail from './pages/TripDetail';
 
-const ProtectedRoute = ({ children }) => {
-  const [user, setUser] = useState(null)
+const ProtectedRoute = ({ children }: { children: React.ReactNode}) => {
+  const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   
   useEffect (() => {
