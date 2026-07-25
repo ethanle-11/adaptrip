@@ -263,7 +263,7 @@ function TripDetail() {
         try {
             const { error: saveTitleError } = await supabase.from('trips').update({ title: editedTitle}).eq('id', id)
             if (saveTitleError) throw saveTitleError
-            setTrip(prev => ({ ...prev, title: editedTitle}))
+            setTrip((prev: any) => ({ ...prev, title: editedTitle}))
             setTitleEditing(false)
         } catch (error) {
             setError('Failed to set title')
@@ -283,7 +283,7 @@ function TripDetail() {
                 })
                 .eq('id', id)
             if (saveDateError) throw saveDateError
-            setTrip(prev => ({ ...prev, 
+            setTrip((prev: any) => ({ ...prev, 
                 start_date: dateRange?.from?.toISOString().split('T')[0], 
                 end_date: dateRange?.to?.toISOString().split('T')[0] 
             }))
@@ -597,7 +597,7 @@ function TripDetail() {
                                             {recommendation.suggestedAlternatives.length === 0 ? (
                                                 <p className="text-xs text-gray-400">No nearby alternatives found</p>
                                             ) : (
-                                                recommendation.suggestedAlternatives.map(alternative => (
+                                                recommendation.suggestedAlternatives.map((alternative: any) => (
                                                     <div
                                                         key={alternative.id}
                                                         onClick={() => handleSwapActivity(recommendation, alternative)}
