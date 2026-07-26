@@ -9,7 +9,9 @@ import adaptationRouter from './routes/adapt'
 dotenv.config()
 
 const app = express()
-app.use(cors())
+app.use(cors({
+    origin: ['http://localhost:5173', 'adaptrip-production.up.railway.app']
+}))
 app.use(express.json())
 app.use('/api/places', placesRouter)
 app.use('/api/geocoding', geocodingRouter)
