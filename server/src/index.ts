@@ -9,15 +9,22 @@ import adaptationRouter from './routes/adapt'
 dotenv.config()
 
 const app = express()
+
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://adaptrip.vercel.app'
+]
+
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || origin.includes('vercel.app') || origin === 'http://localhost:5173') {
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true)
         } else {
             callback(new Error('Not allowed by CORS'))
         }
     }
 }))
+
 app.use(express.json())
 app.use('/api/places', placesRouter)
 app.use('/api/geocoding', geocodingRouter)
