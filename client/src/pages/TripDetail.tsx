@@ -10,6 +10,7 @@ import axios from 'axios'
 
 
 function TripDetail() {
+    console.log('API URL:', import.meta.env.VITE_API_URL)
     const { id } = useParams()
     const [trip, setTrip] = useState<any>(null)
     const [activities, setActivities] = useState<any[]>([])
