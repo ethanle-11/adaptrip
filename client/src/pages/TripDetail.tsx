@@ -218,7 +218,9 @@ function TripDetail() {
                     query: debouncedQuery
                 }
             })
-            setSearchResults(placesResponse.data.places)
+            setSearchResults(placesResponse.data.places.filter(
+                (place: any) => place.location?.latitude != null && place.location?.longitude != null 
+            ))
         }
         searchPlaces()
 
