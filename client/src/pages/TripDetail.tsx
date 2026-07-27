@@ -551,7 +551,9 @@ function TripDetail() {
                         defaultZoom={2}
                         gestureHandling={'greedy'}
                     >
-                        {activities.map(activity => (
+                        {activities
+                        .filter(activity => activity.latitude != null && activity.longitude != null)
+                        .map(activity => (
                             <AdvancedMarker
                                 key={activity.id}
                                 position={{ lat: activity.latitude, lng: activity.longitude}}
