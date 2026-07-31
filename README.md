@@ -56,6 +56,14 @@ VITE_GOOGLE_MAPS_API_KEY=your_google_maps_key
 VITE_API_URL=http://localhost:3001
 ```
 
+Create `server/.env`:
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_KEY=your_service_role_key
+GOOGLE_MAPS_API_KEY=your_google_maps_key
+PORT=3001
+```
+
 ### Installation
 
 ```bash
