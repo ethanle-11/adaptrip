@@ -33,6 +33,10 @@ AdapTrip is a travel-planning platform that builds and manages trip itineraries 
 - PostgreSQL via Supabase
 - Row Level Security
 
+### Deployment
+- Frontend → Vercel
+- Backend → Railway
+
 ## How the Adaptation Engine Works
 1. Fetches a weather forecast for the trip destination using Open-Meteo
 2. Identifies days with bad weather (rain, snow, thunderstorms) based on WMO weather codes and precipitation probability
@@ -88,4 +92,7 @@ cd server && npm run dev
 ```
 
 ## Future Improvements
-- List of things you'd add next
+- Google Places fallback when no indoor alternatives exist in the itinerary
+- Multi-destination trip support
+- Trip sharing with other users
+- Drag and drop activity reordering within days
