@@ -49,7 +49,7 @@ AdapTrip is a travel-planning platform that builds and manages trip itineraries 
 
 ### Installation
 ### Environment Variables
-'client/env.local'
+`client/env.local`
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_GOOGLE_MAPS_API_KEY=
