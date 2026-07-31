@@ -47,7 +47,6 @@ AdapTrip is a travel-planning platform that builds and manages trip itineraries 
 - Supabase account
 - Google Cloud account (Maps, Places, Geocoding APIs enabled)
 
-### Installation
 ### Environment Variables
 Create `client/.env.local`:
 ```env
@@ -55,6 +54,29 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_key
 VITE_API_URL=http://localhost:3001
+```
+
+### Installation
+
+```bash
+# Clone the repo
+git clone https://github.com/yourusername/adaptrip.git
+
+# Install frontend dependencies
+cd client && npm install
+
+# Install backend dependencies
+cd ../server && npm install
+```
+
+### Running Locally
+
+```bash
+# Start frontend (http://localhost:5173)
+cd client && npm run dev
+
+# Start backend (http://localhost:3001)
+cd server && npm run dev
 ```
 
 ## Future Improvements
