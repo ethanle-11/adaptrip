@@ -34,12 +34,26 @@ AdapTrip is a travel-planning platform that builds and manages trip itineraries 
 - Row Level Security
 
 ## How the Adaptation Engine Works
-Brief explanation of the algorithm
+1. Fetches a weather forecast for the trip destination using Open-Meteo
+2. Identifies days with bad weather (rain, snow, thunderstorms) based on WMO weather codes and precipitation probability
+3. Finds outdoor activities scheduled on those days
+4. Searches for indoor or mixed alternatives already in the itinerary within 10km using the Haversine formula
+5. Presents ranked recommendations for the user to accept or dismiss
+6. Accepting a recommendation automatically swaps the two activities' days in the database
 
 ## Getting Started
 ### Prerequisites
+- Node.js v18+
+- Supabase account
+- Google Cloud account (Maps, Places, Geocoding APIs enabled)
+
 ### Installation
 ### Environment Variables
+'client/env.local'
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_GOOGLE_MAPS_API_KEY=
+VITE_API_URL=
 
 ## Future Improvements
 - List of things you'd add next
