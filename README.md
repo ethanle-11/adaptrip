@@ -5,7 +5,13 @@ Plan smarter trips with weather-aware itineraries that adapt to your travel plan
 [Live Demo](https://adaptrip.vercel.app)
 
 ## Overview
-AdapTrip is a travel-planning platform that builds and manages trip itineraries while automatically adapting them based on real-time weather forecasts. Traditional travel-planning tools are static - AdapTrip solves this by comparing scheduled activities to upcoming weather conditions and suggesting intelligent alternatives when weather conflicts arise. The adaptation engine analyzes activity location and category (outdoor/indoor) to filter out options ensuring that suggestions are practical for your itinerary.
+AdapTrip is a travel-planning platform that builds and manages trip itineraries while automatically adapting them based on real-time weather forecasts. Traditional travel-planning tools are static - AdapTrip solves this by comparing scheduled activities to upcoming weather conditions and suggesting intelligent alternatives when weather conflicts arise. The adaptation engine analyzes activity location and category (outdoor/indoor) to filter out options, ensuring that suggestions are practical for your itinerary.
+
+## Screenshots
+![Login](screenshots/login.png)
+![Dashboard](screenshots/dashboard.png)
+![Trip Detail](screenshots/trip-detail.png)
+![Adaptation Engine](screenshots/adaptation.png)
 
 ## Features
 - User authentication
@@ -72,7 +78,7 @@ PORT=3001
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/adaptrip.git
+git clone https://github.com/ethanle-11/adaptrip.git
 
 # Install frontend dependencies
 cd client && npm install
