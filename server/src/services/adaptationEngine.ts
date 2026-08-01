@@ -38,7 +38,7 @@ export const runAdaptation = (activities: Activity[], forecast: ForecastDay[], s
 
     const recommendations: Recommendation[] = []
     for (const day of tripForecast) {
-        if((day.weatherCode >= 51 && day.weatherCode <= 99) || day.precipitationProbability > 50) {
+        if((day.weatherCode >= 51 && day.weatherCode <= 99) || day.precipitationProbability <= 99) {
             const forecastDate = new Date(day.date + 'T00:00')
             const dayIndex = Math.round((forecastDate.getTime() - tripStart.getTime()) / 86400000)
             const affectedActivities = activities.filter(activity => {
